@@ -1,4 +1,5 @@
 import { loadShadersFromURLS, buildProgramFromSources, setupWebGL } from "../../libs/utils.js";
+import { vec2,vec3, flatten } from "../../libs/MV.js";
 
 /** @type {HTMLCanvasElement} */
 let canvas;
@@ -7,6 +8,16 @@ let gl;
 
 let program;
 let quad_vao;       // the quad covering the whole viewport
+
+// The Voronoi sites, as vec2s in clip space. MAX_SITES must match the size of
+// the uniform array in quad.frag
+const MAX_SITES = 256;
+let sites = [];
+let colors = [];
+let u_sites;        // uniform locations
+let u_n_sites;
+let u_type_distance;
+let u_colors;
 
 
 // ---------------------------------------------------------------------------
@@ -72,6 +83,10 @@ function setup(shaders) {
     gl = setupWebGL(canvas);
 
     program = buildProgramFromSources(gl, shaders["quad.vert"], shaders["quad.frag"]);
+    u_sites = gl.getUniformLocation(program, "u_sites");
+    u_n_sites = gl.getUniformLocation(program, "u_n_sites");
+    u_type_distance=gl.getUniformLocation(program,"u_type_distance");
+    u_colors=gl.getUniformLocation(program, "u_colors");
 
     // A quad covering the whole viewport, as two triangles: its corners are
     // the corners of clip space, from (-1, -1) to (1, 1)
@@ -79,7 +94,10 @@ function setup(shaders) {
         -1, -1,     1, -1,     1, 1,       // first triangle
         -1, -1,     1, 1,     -1, 1,       // second triangle
     ]);
-
+    sites.push(vec2(0,0.3));
+    sites.push(vec2(0.5,0.5));
+    colors.push(vec3(0.7,0,0));
+    colors.push(vec3(0,0.5,0));
     quad_vao = gl.createVertexArray();
     gl.bindVertexArray(quad_vao);
 
@@ -108,6 +126,9 @@ function animate(timestamp) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(program);
+    gl.uniform2fv(u_sites, flatten(sites));
+    gl.uniform1i(u_n_sites, sites.length);
+    gl.uniform3fv(u_colors,flatten(colors));
     gl.bindVertexArray(quad_vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindVertexArray(null);
