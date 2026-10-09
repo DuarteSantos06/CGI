@@ -30,7 +30,17 @@ let u_colors;
 // top-left corner and y growing downwards.
 // ---------------------------------------------------------------------------
 
+// Converts a position in canvas pixels to clip space [-1, 1] (y grows upwards)
+function pixels_to_clip(x, y) {
+    return vec2(2 * x / canvas.width - 1, 1 - 2 * y / canvas.height);
+}
+
 function on_mouse_down(x, y) {
+    if (sites.length >= MAX_SITES) return;
+
+    sites.push(pixels_to_clip(x, y));
+    colors.push(vec3(Math.random(), Math.random(), Math.random()));
+    update_points_buffer();
 }
 
 function on_mouse_move(x, y) {
