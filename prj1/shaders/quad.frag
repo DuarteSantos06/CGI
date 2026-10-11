@@ -9,8 +9,11 @@ const int CHEBYSHEV_DISTANCE=3;
 
 uniform vec2 u_sites[MAX_SITES];
 uniform vec3 u_colors[MAX_SITES];   
-uniform int u_n_sites;   // quantos sites existem
+uniform int u_n_sites;   
 uniform int u_type_distance;
+uniform vec2 u_center;       
+uniform float u_half_height;  
+uniform float u_aspect;       
 
 
 in vec2 v_position;
@@ -23,11 +26,13 @@ float calculate_distance(vec2 p,vec2 u_site,int u_type_distance){
     }
     else if(u_type_distance==MANHATTAN_DISTANCE)
     {
-        return distance(p,u_site);
+        vec2 d = abs(p - u_site);
+        return d.x + d.y;
     }
     else if (u_type_distance==CHEBYSHEV_DISTANCE)
     {
-        return distance(p,u_site);
+        vec2 d = abs(p - u_site);
+        return max(d.x, d.y);
     }
     return distance(p,u_site);
 }
@@ -46,5 +51,7 @@ vec4 get_color(vec2 p) {
 }
 
 void main() {
-    color = get_color(v_position);
+    // Clip space -> mundo
+    vec2 world = u_center + v_position * vec2(u_half_height * u_aspect, u_half_height);
+    color = get_color(world);
 }
