@@ -23,7 +23,10 @@ let u_points_center, u_points_half_height, u_points_aspect;   // points program
 
 // The Voronoi sites, as vec2s in world coordinates. MAX_SITES must match the size of
 // the uniform array in quad.frag
-const MAX_SITES = 256;
+const MAX_SITES = 64;
+let dragged_site = -1;
+let is_panning= false;
+let last_x, last_y;
 let sites = [];
 let colors = [];
 let u_sites;        // uniform locations
@@ -57,7 +60,36 @@ function pixels_to_world(x, y) {
                 center[1] + clip[1] * half_height);
 }
 
+// Returns the index of the site closest to the pointer, if it is within
+// PICK_RADIUS pixels of it, or -1 if no site is that close
+const PICK_RADIUS = 8;
+function is_close_to_site(x,y){
+    const world= pixels_to_world(x,y);
+    // The radius is in pixels, so convert it to world units: one pixel
+    // covers 2 * half_height / canvas.height world units
+    let min_dist = PICK_RADIUS * 2 * half_height / canvas.height;
+    let closest = -1;
+    for( let i = 0 ; i < sites.length ; i ++){
+        const dx = sites[i][0] - world[0];
+        const dy = sites[i][1] - world[1];
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= min_dist) {
+            min_dist = d;
+            closest = i;
+        }
+    }
+    return closest;
+}
+
 function on_mouse_down(x, y) {
+    dragged_site = is_close_to_site(x,y);
+    if ( dragged_site !=-1){
+        return;
+    }
+    is_panning = true;
+    last_x = x;
+    last_y = y;
+
     if (sites.length >= MAX_SITES) return;
 
     sites.push(pixels_to_world(x, y));
@@ -65,10 +97,32 @@ function on_mouse_down(x, y) {
     update_points_buffer();
 }
 
+function calculate_movement (x,y){
+
+}
+
 function on_mouse_move(x, y) {
+    if (dragged_site != -1) {
+        sites[dragged_site] = pixels_to_world(x, y);
+        update_points_buffer();
+    }
+    else if (is_panning)
+    {
+        const dx = x - last_x;
+        const dy = y - last_y;
+
+        const world_per_pixel = 2 * half_height / canvas.height;
+        center[0] -= dx * world_per_pixel;
+        center[1] += dy * world_per_pixel;
+
+        last_x = x;
+        last_y = y;
+    }
 }
 
 function on_mouse_up(x, y) {
+    dragged_site= -1;
+    is_panning=false;
 }
 
 // dy > 0 when the wheel is scrolled down (towards the user)

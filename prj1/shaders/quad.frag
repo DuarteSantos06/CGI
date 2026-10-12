@@ -2,7 +2,7 @@
 
 precision highp float;
 
-const int MAX_SITES = 256;    
+const int MAX_SITES = 64;    
 const int EUCLIDEAN_DISTANCE=1;
 const int MANHATTAN_DISTANCE=2;
 const int CHEBYSHEV_DISTANCE=3;
