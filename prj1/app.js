@@ -25,7 +25,10 @@ let u_points_center, u_points_half_height, u_points_aspect;   // points program
 // the uniform array in quad.frag
 const MAX_SITES = 64;
 let dragged_site = -1;
-let is_panning= false;
+let mouse_down = false;     // botão carregado fora de um site
+let moved = false;          // o rato já se afastou o suficiente para ser pan
+const PAN_THRESHOLD = 5;    // pixels
+let start_x, start_y;       // onde o clique começou
 let last_x, last_y;
 let sites = [];
 let colors = [];
@@ -86,19 +89,13 @@ function on_mouse_down(x, y) {
     if ( dragged_site !=-1){
         return;
     }
-    is_panning = true;
+    // we don't know if it as pan or a click
+    mouse_down = true;
+    moved = false;
+    start_x = x;
+    start_y = y;
     last_x = x;
     last_y = y;
-
-    if (sites.length >= MAX_SITES) return;
-
-    sites.push(pixels_to_world(x, y));
-    colors.push(vec3(Math.random(), Math.random(), Math.random()));
-    update_points_buffer();
-}
-
-function calculate_movement (x,y){
-
 }
 
 function on_mouse_move(x, y) {
@@ -106,8 +103,16 @@ function on_mouse_move(x, y) {
         sites[dragged_site] = pixels_to_world(x, y);
         update_points_buffer();
     }
-    else if (is_panning)
+    else if (mouse_down)
     {
+        // it just becomes a pan if it moved more than  PAN_THRESHOLD
+        if (!moved) {
+            const ddx = x - start_x;
+            const ddy = y - start_y;
+            if (Math.sqrt(ddx * ddx + ddy * ddy) < PAN_THRESHOLD) return;
+            moved = true;
+        }
+
         const dx = x - last_x;
         const dy = y - last_y;
 
@@ -121,8 +126,15 @@ function on_mouse_move(x, y) {
 }
 
 function on_mouse_up(x, y) {
-    dragged_site= -1;
-    is_panning=false;
+    //if the mouse never moved and it was a click, add a site to the array
+    if (mouse_down && !moved && sites.length < MAX_SITES) {
+        sites.push(pixels_to_world(start_x, start_y));
+        colors.push(vec3(Math.random(), Math.random(), Math.random()));
+        update_points_buffer();
+    }
+    dragged_site = -1;
+    mouse_down = false;
+    moved = false;
 }
 
 // dy > 0 when the wheel is scrolled down (towards the user)
