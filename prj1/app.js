@@ -36,6 +36,11 @@ let u_sites;        // uniform locations
 let u_n_sites;
 let u_type_distance;
 let u_colors;
+let u_paint_border;
+let paint_border;
+
+let mouse_x;
+let mouse_y;
 
 // Must match the constants in quad.frag
 const EUCLIDEAN_DISTANCE = 1;
@@ -99,6 +104,8 @@ function on_mouse_down(x, y) {
 }
 
 function on_mouse_move(x, y) {
+    mouse_x=x;
+    mouse_y=y;
     if (dragged_site != -1) {
         sites[dragged_site] = pixels_to_world(x, y);
         update_points_buffer();
@@ -139,6 +146,41 @@ function on_mouse_up(x, y) {
 
 // dy > 0 when the wheel is scrolled down (towards the user)
 function on_wheel(x, y, dy) {
+    if(dy>1)
+    {
+        half_height*=1.1;
+    }
+    else {
+        half_height/=1.1;
+    }
+}
+
+function closest_site(x,y)
+{
+    const world= pixels_to_world(x,y);
+    let min_dist = Infinity;
+    let closest = -1;
+    for( let i = 0 ; i < sites.length ; i ++){
+        const dx = sites[i][0] - world[0];
+        const dy = sites[i][1] - world[1];
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d <= min_dist) {
+            min_dist = d;
+            closest = i;
+        }
+    }
+    return closest;
+}
+
+function remove_site(){
+    const i = closest_site(mouse_x, mouse_y);
+    if( i == -1) //if there is no site on the canvas
+    {
+        return;
+    }
+    sites.splice(i,1);
+    colors.splice(i,1);
+    update_points_buffer();
 }
 
 function on_key(key) {
@@ -153,8 +195,10 @@ function on_key(key) {
             type_distance = CHEBYSHEV_DISTANCE;
             break;
         case 'b':       // toggle cell borders
+            paint_border= !paint_border;
             break;
         case 'x':       // remove the site under the pointer
+            remove_site();
             break;
         case 'm':       // switch rendering technique / split view
             break;
@@ -200,6 +244,7 @@ function setup(shaders) {
     u_center = gl.getUniformLocation(program, "u_center");
     u_half_height = gl.getUniformLocation(program, "u_half_height");
     u_aspect = gl.getUniformLocation(program, "u_aspect");
+    u_paint_border= gl.getUniformLocation(program,"u_paint_border");
 
     // A quad covering the whole viewport, as two triangles: its corners are
     // the corners of clip space, from (-1, -1) to (1, 1)
@@ -269,6 +314,7 @@ function animate(timestamp) {
     gl.uniform1i(u_n_sites, sites.length);
     gl.uniform1i(u_type_distance, type_distance);
     gl.uniform3fv(u_colors, flatten(colors));
+    gl.uniform1i(u_paint_border, paint_border ? 1 : 0);
 
     gl.bindVertexArray(quad_vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
