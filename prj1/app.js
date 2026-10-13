@@ -146,13 +146,7 @@ function on_mouse_up(x, y) {
 
 // dy > 0 when the wheel is scrolled down (towards the user)
 function on_wheel(x, y, dy) {
-    if(dy>1)
-    {
-        half_height*=1.1;
-    }
-    else {
-        half_height/=1.1;
-    }
+    half_height *= Math.exp(dy * 0.001);
 }
 
 function closest_site(x,y)
