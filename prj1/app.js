@@ -13,6 +13,11 @@ let points_program;
 let points_vao;     // the VAO for the points
 let points_buffer;  // the buffer for the points
 
+// Which rendering technique is shown
+const SEARCH_MODE = 0;
+const SURFACES_MODE = 1;
+let mode = SEARCH_MODE;
+
 // The camera: the world point shown at the centre of the canvas, and half
 // the visible height in world units. The visible width follows from the
 // aspect ratio, so one world unit covers the same pixels in x and y
@@ -22,7 +27,6 @@ let u_center, u_half_height, u_aspect;                  // quad program
 let u_points_center, u_points_half_height, u_points_aspect;   // points program
 
 // The Voronoi sites, as vec2s in world coordinates. MAX_SITES must match the size of
-// the uniform array in quad.frag
 const MAX_SITES = 64;
 let dragged_site = -1;
 let mouse_down = false;     // botão carregado fora de um site
@@ -37,7 +41,7 @@ let u_n_sites;
 let u_type_distance;
 let u_colors;
 let u_paint_border;
-let paint_border;
+let paint_border=true;
 
 let mouse_x;
 let mouse_y;
@@ -195,6 +199,7 @@ function on_key(key) {
             remove_site();
             break;
         case 'm':       // switch rendering technique / split view
+            mode = (mode == SEARCH_MODE) ? SURFACES_MODE : SEARCH_MODE;
             break;
     }
 }
@@ -293,13 +298,13 @@ function setup(shaders) {
     window.requestAnimationFrame(animate);
 }
 
-function animate(timestamp) {
-    window.requestAnimationFrame(animate);
 
-    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const aspect = canvas.width / canvas.height;
+function draw_surfaces(aspect) {
+    //TODO
+}
 
+function draw_search(aspect) {
     gl.useProgram(program);
     gl.uniform2fv(u_center, center);
     gl.uniform1f(u_half_height, half_height);
@@ -313,7 +318,20 @@ function animate(timestamp) {
     gl.bindVertexArray(quad_vao);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindVertexArray(null);
+}
 
+function animate(timestamp) {
+    window.requestAnimationFrame(animate);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const aspect = canvas.width / canvas.height;
+
+    if (mode == SEARCH_MODE) {
+        draw_search(aspect);
+    } else {
+        draw_surfaces(aspect);
+    }
 
     gl.useProgram(points_program);
     gl.uniform2fv(u_points_center, center);
