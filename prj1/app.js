@@ -7,6 +7,7 @@ let canvas;
 let gl;
 
 let menu;           // the HTML menu with the keys
+let info;           // the HTML panel with the current state
 
 let program;
 let quad_vao;       // the quad covering the whole viewport
@@ -201,6 +202,7 @@ function on_key(key) {
             break;
         case 'h':       // show / hide the menu
             menu.hidden = !menu.hidden;
+            info.hidden = menu.hidden;
             break;
     }
 }
@@ -236,6 +238,7 @@ function setup(shaders) {
     canvas = document.getElementById("gl-canvas");
     gl = setupWebGL(canvas);
     menu = document.getElementById("menu");
+    info = document.getElementById("info");
 
     program = buildProgramFromSources(gl, shaders["quad.vert"], shaders["quad.frag"]);
     u_sites = gl.getUniformLocation(program, "u_sites");
@@ -340,10 +343,24 @@ function draw_search(aspect) {
     gl.bindVertexArray(null);
 }
 
+// Shows the current state in the info panel
+const DISTANCE_NAMES = { [EUCLIDEAN_DISTANCE]: "Euclidiana", [MANHATTAN_DISTANCE]: "Manhattan", [CHEBYSHEV_DISTANCE]: "Chebyshev" };
+function update_info() {
+    info.innerHTML =
+        "<b>Distância:</b> " + DISTANCE_NAMES[type_distance] + "<br>" +
+        "<b>Modo:</b> " + (mode == SEARCH_MODE ? "Procura" : "Superfícies") + "<br>" +
+        "<b>Bordas:</b> " + (paint_border ? "sim" : "não") + "<br>" +
+        "<b>Sites:</b> " + sites.length + " / " + MAX_SITES + "<br>" +
+        "<b>Zoom:</b> " + (1 / half_height).toFixed(2) + "x";
+}
+
 function animate(timestamp) {
     window.requestAnimationFrame(animate);
 
+    update_info();
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
     const aspect = canvas.width / canvas.height;
 
     if (mode == SEARCH_MODE) {
