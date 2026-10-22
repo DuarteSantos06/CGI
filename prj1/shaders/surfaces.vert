@@ -14,7 +14,7 @@ uniform vec2 u_center;
 uniform float u_half_height;
 uniform float u_aspect;
 
-out vec4 v_color;
+out vec3 v_color;
 
 #define PI 3.14159265359
 
@@ -24,7 +24,7 @@ void main() {
     vec2 site = u_sites[site_idx];
     
     // Passar a cor deste site para o fragment shader
-    v_color = vec4(u_colors[site_idx], 1.0);
+    v_color = u_colors[site_idx];
 
     vec2 world_pos;
     float z_dist;
