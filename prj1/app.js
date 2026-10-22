@@ -9,7 +9,7 @@ let gl;
 let program;
 let quad_vao;       // the quad covering the whole viewport
 
-let points_program;
+let points_program; // the program for drawing the points
 let points_vao;     // the VAO for the points
 let points_buffer;  // the buffer for the points
 
@@ -41,7 +41,7 @@ let u_n_sites;
 let u_type_distance;
 let u_colors;
 let u_paint_border;
-let paint_border=true;
+let paint_border = true;
 
 let mouse_x;
 let mouse_y;
@@ -69,19 +69,19 @@ function pixels_to_world(x, y) {
     const clip = pixels_to_clip(x, y);
     const aspect = canvas.width / canvas.height;
     return vec2(center[0] + clip[0] * half_height * aspect,
-                center[1] + clip[1] * half_height);
+        center[1] + clip[1] * half_height);
 }
 
 // Returns the index of the site closest to the pointer, if it is within
 // PICK_RADIUS pixels of it, or -1 if no site is that close
 const PICK_RADIUS = 8;
-function is_close_to_site(x,y){
-    const world= pixels_to_world(x,y);
+function is_close_to_site(x, y) {
+    const world = pixels_to_world(x, y);
     // The radius is in pixels, so convert it to world units: one pixel
     // covers 2 * half_height / canvas.height world units
     let min_dist = PICK_RADIUS * 2 * half_height / canvas.height;
     let closest = -1;
-    for( let i = 0 ; i < sites.length ; i ++){
+    for (let i = 0; i < sites.length; i++) {
         const dx = sites[i][0] - world[0];
         const dy = sites[i][1] - world[1];
         const d = Math.sqrt(dx * dx + dy * dy);
@@ -94,8 +94,8 @@ function is_close_to_site(x,y){
 }
 
 function on_mouse_down(x, y) {
-    dragged_site = is_close_to_site(x,y);
-    if ( dragged_site !=-1){
+    dragged_site = is_close_to_site(x, y);
+    if (dragged_site != -1) {
         return;
     }
     // we don't know if it as pan or a click
@@ -108,14 +108,13 @@ function on_mouse_down(x, y) {
 }
 
 function on_mouse_move(x, y) {
-    mouse_x=x;
-    mouse_y=y;
+    mouse_x = x;
+    mouse_y = y;
     if (dragged_site != -1) {
         sites[dragged_site] = pixels_to_world(x, y);
         update_points_buffer();
     }
-    else if (mouse_down)
-    {
+    else if (mouse_down) {
         // it just becomes a pan if it moved more than  PAN_THRESHOLD
         if (!moved) {
             const ddx = x - start_x;
@@ -153,12 +152,11 @@ function on_wheel(x, y, dy) {
     half_height *= Math.exp(dy * 0.001);
 }
 
-function closest_site(x,y)
-{
-    const world= pixels_to_world(x,y);
+function closest_site(x, y) {
+    const world = pixels_to_world(x, y);
     let min_dist = Infinity;
     let closest = -1;
-    for( let i = 0 ; i < sites.length ; i ++){
+    for (let i = 0; i < sites.length; i++) {
         const dx = sites[i][0] - world[0];
         const dy = sites[i][1] - world[1];
         const d = Math.sqrt(dx * dx + dy * dy);
@@ -170,14 +168,14 @@ function closest_site(x,y)
     return closest;
 }
 
-function remove_site(){
+function remove_site() {
     const i = closest_site(mouse_x, mouse_y);
-    if( i == -1) //if there is no site on the canvas
+    if (i == -1) //if there is no site on the canvas
     {
         return;
     }
-    sites.splice(i,1);
-    colors.splice(i,1);
+    sites.splice(i, 1);
+    colors.splice(i, 1);
     update_points_buffer();
 }
 
@@ -193,7 +191,7 @@ function on_key(key) {
             type_distance = CHEBYSHEV_DISTANCE;
             break;
         case 'b':       // toggle cell borders
-            paint_border= !paint_border;
+            paint_border = !paint_border;
             break;
         case 'x':       // remove the site under the pointer
             remove_site();
@@ -243,7 +241,7 @@ function setup(shaders) {
     u_center = gl.getUniformLocation(program, "u_center");
     u_half_height = gl.getUniformLocation(program, "u_half_height");
     u_aspect = gl.getUniformLocation(program, "u_aspect");
-    u_paint_border= gl.getUniformLocation(program,"u_paint_border");
+    u_paint_border = gl.getUniformLocation(program, "u_paint_border");
 
     // A quad covering the whole viewport, as two triangles: its corners are
     // the corners of clip space, from (-1, -1) to (1, 1)
