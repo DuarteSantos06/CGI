@@ -86,7 +86,7 @@ function pixels_to_world(x, y) {
 
 // Returns the index of the site closest to the pointer, if it is within
 // PICK_RADIUS pixels of it, or -1 if no site is that close
-const PICK_RADIUS = 8;
+const PICK_RADIUS = 12;
 function site_close_8pc(x, y) {
     const world = pixels_to_world(x, y);
     // The radius is in pixels, so convert it to world units: one pixel
@@ -164,24 +164,8 @@ function on_wheel(x, y, dy) {
     half_height *= Math.exp(dy * 0.001);
 }
 
-function closest_site(x, y) {
-    const world = pixels_to_world(x, y);
-    let min_dist = Infinity;
-    let closest = -1;
-    for (let i = 0; i < sites.length; i++) {
-        const dx = sites[i][0] - world[0];
-        const dy = sites[i][1] - world[1];
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d <= min_dist) {
-            min_dist = d;
-            closest = i;
-        }
-    }
-    return closest;
-}
-
 function remove_site() {
-    const i = closest_site(mouse_x, mouse_y);
+    const i = site_close_8pc(mouse_x, mouse_y);
     if (i == -1) //if there is no site on the canvas
     {
         return;
