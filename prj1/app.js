@@ -6,6 +6,8 @@ let canvas;
 /** @type {WebGL2RenderingContext} */
 let gl;
 
+let menu;           // the HTML menu with the keys
+
 let program;
 let quad_vao;       // the quad covering the whole viewport
 
@@ -41,7 +43,7 @@ let u_n_sites;
 let u_type_distance;
 let u_colors;
 let u_paint_border;
-let paint_border = true;
+let paint_border = false;
 
 let mouse_x;
 let mouse_y;
@@ -75,7 +77,7 @@ function pixels_to_world(x, y) {
 // Returns the index of the site closest to the pointer, if it is within
 // PICK_RADIUS pixels of it, or -1 if no site is that close
 const PICK_RADIUS = 8;
-function is_close_to_site(x, y) {
+function site_close_8pc(x, y) {
     const world = pixels_to_world(x, y);
     // The radius is in pixels, so convert it to world units: one pixel
     // covers 2 * half_height / canvas.height world units
@@ -94,7 +96,7 @@ function is_close_to_site(x, y) {
 }
 
 function on_mouse_down(x, y) {
-    dragged_site = is_close_to_site(x, y);
+    dragged_site = site_close_8pc(x, y);
     if (dragged_site != -1) {
         return;
     }
@@ -174,6 +176,10 @@ function remove_site() {
     {
         return;
     }
+    if(sites.length == 1)
+    {
+        return;
+    }
     sites.splice(i, 1);
     colors.splice(i, 1);
     update_points_buffer();
@@ -198,6 +204,9 @@ function on_key(key) {
             break;
         case 'm':       // switch rendering technique / split view
             mode = (mode == SEARCH_MODE) ? SURFACES_MODE : SEARCH_MODE;
+            break;
+        case 'h':       // show / hide the menu
+            menu.hidden = !menu.hidden;
             break;
     }
 }
@@ -232,6 +241,7 @@ function update_points_buffer() {
 function setup(shaders) {
     canvas = document.getElementById("gl-canvas");
     gl = setupWebGL(canvas);
+    menu = document.getElementById("menu");
 
     program = buildProgramFromSources(gl, shaders["quad.vert"], shaders["quad.frag"]);
     u_sites = gl.getUniformLocation(program, "u_sites");
@@ -250,10 +260,8 @@ function setup(shaders) {
         -1, -1, 1, 1, -1, 1,       // second triangle
     ]);
 
-    sites.push(vec2(0, 0.3));
-    sites.push(vec2(0.5, 0.5));
-    colors.push(vec3(0.7, 0, 0));
-    colors.push(vec3(0, 0.5, 0));
+    sites.push(vec2(Math.random() * 2 - 1, Math.random() * 2 - 1));
+    colors.push(vec3(Math.random(), Math.random(), Math.random()));
 
     quad_vao = gl.createVertexArray();
     gl.bindVertexArray(quad_vao);

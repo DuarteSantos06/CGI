@@ -14,3 +14,17 @@ body {
 canvas {
     display: block;     /* no gap under the canvas, as an inline element would leave */
 }
+
+#menu {
+    position: absolute;   /* fica por cima do canvas */
+    top: 8px;
+    left: 8px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.6);   /* preto meio transparente */
+    color: white;
+    font-family: sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
+    border-radius: 4px;
+    pointer-events: none; /* os cliques passam para o canvas */
+}
