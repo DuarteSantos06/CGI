@@ -257,7 +257,7 @@ function setup(shaders) {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, corners, gl.STATIC_DRAW);
 
-    const a_position = gl.getAttribLocation(program, "a_position");
+    let a_position = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(a_position);
     gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
 
@@ -273,9 +273,9 @@ function setup(shaders) {
     gl.bindVertexArray(points_vao);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, points_buffer);
-    const a_point_position = gl.getAttribLocation(points_program, "a_position");
-    gl.enableVertexAttribArray(a_point_position);
-    gl.vertexAttribPointer(a_point_position, 2, gl.FLOAT, false, 0, 0);
+    a_position = gl.getAttribLocation(points_program, "a_position");
+    gl.enableVertexAttribArray(a_position);
+    gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
 
     gl.bindVertexArray(null);
 
