@@ -56,6 +56,16 @@ const CHEBYSHEV_DISTANCE = 3;
 let type_distance = EUCLIDEAN_DISTANCE;
 
 
+// surface
+let surfaces_program;
+let u_surf_sites;
+let u_surf_colors;
+let u_surf_type;
+let u_surf_center;
+let u_surf_half_height;
+let u_surf_aspect;
+
+
 // ---------------------------------------------------------------------------
 // Input. The event listeners are already set up in setup_input(); fill in
 // these functions. Mouse positions are in canvas pixels, with (0, 0) at the
@@ -240,6 +250,15 @@ function setup(shaders) {
     u_aspect = gl.getUniformLocation(program, "u_aspect");
     u_paint_border = gl.getUniformLocation(program, "u_paint_border");
 
+    //second way of drawing
+    surfaces_program = buildProgramFromSources(gl, shaders["surfaces.vert"], shaders["surfaces.frag"]);
+    u_surf_sites       = gl.getUniformLocation(surfaces_program, "u_sites");
+    u_surf_colors      = gl.getUniformLocation(surfaces_program, "u_colors");
+    u_surf_type        = gl.getUniformLocation(surfaces_program, "u_type_distance");
+    u_surf_center      = gl.getUniformLocation(surfaces_program, "u_center");
+    u_surf_half_height = gl.getUniformLocation(surfaces_program, "u_half_height");
+    u_surf_aspect      = gl.getUniformLocation(surfaces_program, "u_aspect");
+
     // A quad covering the whole viewport, as two triangles: its corners are
     // the corners of clip space, from (-1, -1) to (1, 1)
     const corners = new Float32Array([
@@ -294,7 +313,18 @@ function setup(shaders) {
 
 
 function draw_surfaces(aspect) {
-    //TODO
+    gl.useProgram(surfaces_program);
+    gl.uniform2fv(u_surf_center, center);
+    gl.uniform1f(u_surf_half_height, half_height);
+    gl.uniform1f(u_surf_aspect, aspect);
+    gl.uniform2fv(u_surf_sites, flatten(sites));
+    gl.uniform3fv(u_surf_colors, flatten(colors));
+    gl.uniform1i(u_surf_type, type_distance);
+    const segments = (type_distance == EUCLIDEAN_DISTANCE) ? 64 : 4;
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.drawArraysInstanced(gl.TRIANGLE_FAN,0,segments+2,sites.length);
+    gl.disable(gl.DEPTH_TEST);
 }
 
 function draw_search(aspect) {
@@ -329,7 +359,7 @@ function animate(timestamp) {
 
     update_info();
 
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const aspect = canvas.width / canvas.height;
 
@@ -346,8 +376,7 @@ function animate(timestamp) {
     gl.bindVertexArray(points_vao);
     gl.drawArrays(gl.POINTS, 0, sites.length);
     gl.bindVertexArray(null);
-
     gl.useProgram(null);
 }
 
-loadShadersFromURLS(["quad.vert", "quad.frag", "points.vert", "points.frag"]).then(shaders => setup(shaders));
+loadShadersFromURLS(["quad.vert", "quad.frag", "points.vert", "points.frag","surfaces.vert","surfaces.frag"]).then(shaders => setup(shaders));
