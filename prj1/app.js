@@ -19,7 +19,9 @@ let points_buffer;  // the buffer for the points
 // Which rendering technique is shown
 const SEARCH_MODE = 0;
 const SURFACES_MODE = 1;
+const SPLIT_MODE = 2;
 let mode = SEARCH_MODE;
+
 
 // The camera: the world point shown at the centre of the canvas, and half
 // the visible height in world units. The visible width follows from the
@@ -198,7 +200,7 @@ function on_key(key) {
             remove_site();
             break;
         case 'm':       // switch rendering technique / split view
-            mode = (mode == SEARCH_MODE) ? SURFACES_MODE : SEARCH_MODE;
+            mode = (mode + 1) % 3;
             break;
         case 'h':       // show / hide the menu
             menu.hidden = !menu.hidden;
@@ -343,12 +345,36 @@ function draw_search(aspect) {
     gl.bindVertexArray(null);
 }
 
+
+    function draw_split(aspect) {
+        const half_w = Math.floor(canvas.width / 2);
+    
+        gl.enable(gl.SCISSOR_TEST);
+    
+        // metade esquerda: superfícies
+        gl.scissor(0, 0, half_w, canvas.height);
+        draw_surfaces(aspect);
+    
+        // metade direita: procura
+        gl.scissor(half_w, 0, canvas.width - half_w, canvas.height);
+        draw_search(aspect);
+    
+        // linha a dividir de 2 px (o gl.clear também respeita o scissor)
+        gl.scissor(half_w - 1, 0, 2, canvas.height);
+        gl.clearColor(1, 1, 1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.clearColor(0, 0, 0, 1);
+    
+        gl.disable(gl.SCISSOR_TEST);   
+    }
+
 // Shows the current state in the info panel
 const DISTANCE_NAMES = { [EUCLIDEAN_DISTANCE]: "Euclidiana", [MANHATTAN_DISTANCE]: "Manhattan", [CHEBYSHEV_DISTANCE]: "Chebyshev" };
+const MODE_NAMES = { [SEARCH_MODE]: "Procura", [SURFACES_MODE]: "Superfícies", [SPLIT_MODE]: "Dividido" };
 function update_info() {
     info.innerHTML =
         "<b>Distância:</b> " + DISTANCE_NAMES[type_distance] + "<br>" +
-        "<b>Modo:</b> " + (mode == SEARCH_MODE ? "Procura" : "Superfícies") + "<br>" +
+        "<b>Modo:</b> " + MODE_NAMES[mode] + "<br>" +
         "<b>Bordas:</b> " + (paint_border ? "sim" : "não") + "<br>" +
         "<b>Sites:</b> " + sites.length + " / " + MAX_SITES + "<br>" +
         "<b>Zoom:</b> " + (1 / half_height).toFixed(2) + "x";
@@ -365,8 +391,10 @@ function animate(timestamp) {
 
     if (mode == SEARCH_MODE) {
         draw_search(aspect);
-    } else {
+    } else if (mode == SURFACES_MODE) {
         draw_surfaces(aspect);
+    } else if (mode == SPLIT_MODE) {
+        draw_split(aspect);
     }
 
     gl.useProgram(points_program);
